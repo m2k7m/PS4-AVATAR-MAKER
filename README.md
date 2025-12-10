@@ -65,6 +65,12 @@ Directly download and convert an image from the web.
 python main.py https://example.com/cool_avatar.png
 ```
 
+## 🤖 Telegram Bot Alternative
+
+If you don't have a PC, I am hosting this script on Telegram. You can use it directly via the link below:
+
+[**@PS4AVATARSBOT**](https://t.me/PS4AVATARSBOT)
+
 ## 🌐 Where can I get avatars?
 
 You can find high-quality avatars to convert at the following websites:
@@ -91,12 +97,6 @@ Once you have generated your `.xavatar` file, transfer it to your console via FT
 
   * **[LAPY](https://x.com/Lapy05575948):** For creating the `.xavatar` format.
   * **[m2k7m](https://github.com/m2k7m):** For creating this Python script.
-
-## 🤖 Telegram Bot Alternative
-
-If you don't have a PC, I am hosting this script on Telegram. You can use it directly via the link below:
-
-[**@PS4AVATARSBOT**](https://t.me/PS4AVATARSBOT)
 
 ## ⚠️ Disclaimer
 
