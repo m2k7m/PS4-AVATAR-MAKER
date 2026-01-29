@@ -25,8 +25,8 @@ import shutil
 import sys
 import tempfile
 import time
-import zipfile
 from io import BytesIO
+from zipfile import ZIP_DEFLATED, ZipFile
 
 try:
     from wand.image import Image as WandImage
@@ -41,7 +41,7 @@ except ImportError:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "Wand"])
         from wand.image import Image as WandImage
     else:
-        sys.exit("Wand library is required to run this script. Exiting.")
+        sys.exit("Wand library is required to run this utility.")
 
 sizes = [440, 260, 128, 64]
 
@@ -49,7 +49,7 @@ sizes = [440, 260, 128, 64]
 def add_files_to_zip_in_memory(file_paths: list[str]) -> bytes:
     in_memory_zip = BytesIO()
 
-    with zipfile.ZipFile(in_memory_zip, "w", zipfile.ZIP_DEFLATED) as zf:
+    with ZipFile(in_memory_zip, "w", ZIP_DEFLATED) as zf:
         for file_path in file_paths:
             arcname = os.path.basename(file_path)
             zf.write(file_path, arcname)
@@ -88,7 +88,7 @@ def process_link(link: str) -> bytes:
             subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
             import requests
         else:
-            sys.exit("requests library is required to run this script. Exiting.")
+            sys.exit("requests library is required to process images from URLs.")
 
     response = requests.get(link, stream=True)
 
@@ -134,7 +134,6 @@ def convert_image(image_path: str, output_path: str) -> None:
             with WandImage(filename=image_path) as img:
                 process_image(img, temp_dir)
 
-        
         copy_files(temp_dir)
 
         file_paths = [

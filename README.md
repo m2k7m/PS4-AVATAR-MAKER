@@ -2,6 +2,10 @@
 
 A Python utility to automatically convert images (local files or URLs) into the `.xavatar` format. This tool handles resizing, and directory structure generation required for custom avatars (typically for Jailbroken PlayStation 4/5).
 
+## ⚠️ Disclaimer
+
+This tool is provided for educational and customization purposes. Please ensure you have the right to use and modify the images you convert. The author is not responsible for any issues arising from the use of generated files on modified hardware.
+
 ## 🚀 Features
 
 * **Dual Input Support:** Accepts local image paths or direct web URLs.
@@ -11,13 +15,13 @@ A Python utility to automatically convert images (local files or URLs) into the 
 
 ## 📋 Prerequisites
 
-Before running the script, ensure you have the following installed:
+Before running the utility, ensure you have the following installed:
 
 ### 1. Python
 You need Python 3.x installed on your system.
 
 ### 2. ImageMagick (Important)
-This script uses the **Wand** library, which is a binding for ImageMagick. You must have the ImageMagick binary installed on your operating system for Wand to work.
+This utility uses the **Wand** library, which is a binding for ImageMagick. You must have the ImageMagick binary installed on your operating system for Wand to work.
 
 * **Windows:** [Download ImageMagick](https://imagemagick.org/script/download.php#windows).
 * **Linux:** `sudo apt-get install libmagickwand-dev`
@@ -27,7 +31,7 @@ Check [docs.wand-py.org](https://docs.wand-py.org/en/0.6.12/guide/install.html) 
 
 ## 📦 Installation
 
-1.  Clone this repository or download the script.
+1.  Clone this repository or download as zip .
 2.  (Optional) Install the required Python packages **manually**:
 
 ```bash
@@ -35,11 +39,11 @@ pip install Wand requests
 ````
 
 > [\!NOTE]
-> The script includes an auto-installer feature that will ask to install these if they are missing.
+> The utility includes an auto-installer feature that will ask to install these if they are missing.
 
 ## 💻 Usage
 
-Open your terminal or command prompt in the script's directory.
+Open your terminal or command prompt in the utility's directory.
 
 ### Basic Usage
 
@@ -67,7 +71,7 @@ python main.py https://example.com/cool_avatar.png
 
 ## 🤖 Telegram Bot Alternative
 
-If you don't have a PC, I am hosting this script on Telegram. You can use it directly via the link below:
+If you don't have a PC, I am hosting this utility on Telegram. You can use it directly via the link below:
 
 [**@PS4AVATARSBOT**](https://t.me/PS4AVATARSBOT)
 
@@ -96,11 +100,11 @@ Once you have generated your `.xavatar` file, transfer it to your console via FT
 ## 🏆 Credits
 
   * **[LAPY](https://x.com/Lapy05575948):** For creating the `.xavatar` format.
-  * **[m2k7m](https://github.com/m2k7m):** For creating this Python script.
+  * **[m2k7m](https://github.com/m2k7m):** For creating this Python utility.
 
-## ⚠️ Disclaimer
+## Contributing
 
-This tool is provided for educational and customization purposes. Please ensure you have the right to use and modify the images you convert. The author is not responsible for any issues arising from the use of generated files on modified hardware.
+Pull requests are welcome.
 
 ## 📄 License
 
