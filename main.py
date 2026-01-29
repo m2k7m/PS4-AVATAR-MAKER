@@ -1,3 +1,25 @@
+#  Copyright (C) 2025 m2k7m
+#
+#  The MIT License (MIT)
+#
+#  Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to deal
+#  in the Software without restriction, including without limitation the rights
+#  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+#  copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+#
+#  The above copyright notice and this permission notice shall be included in all
+#  copies or substantial portions of the Software.
+#
+#  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+#  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+#  SOFTWARE.
+
 import os
 import shutil
 import sys
@@ -94,7 +116,7 @@ def process_image(img: WandImage, temp_dir: str) -> None:
         img.save(filename=output_filename)
 
 
-def convert_image(image_path: str, output_path: str, activated: bool = False) -> None:
+def convert_image(image_path: str, output_path: str) -> None:
     with tempfile.TemporaryDirectory() as temp_dir:
         if image_path.startswith(
             (
@@ -112,8 +134,8 @@ def convert_image(image_path: str, output_path: str, activated: bool = False) ->
             with WandImage(filename=image_path) as img:
                 process_image(img, temp_dir)
 
-        if activated:
-            copy_files(temp_dir)
+        
+        copy_files(temp_dir)
 
         file_paths = [
             os.path.join(temp_dir, filename) for filename in os.listdir(temp_dir)
@@ -146,11 +168,4 @@ if __name__ == "__main__":
     else:
         sys.exit(f"Usage: {sys.executable} {__file__} <input_image> [output_image]")
 
-    choice = input("Is your account offile activated? (y/n): ")
-
-    if choice.lower() == "y":
-        convert_image(input_file, output_file, activated=True)
-    elif choice.lower() == "n":
-        convert_image(input_file, output_file)
-    else:
-        sys.exit("Invalid choice. Exiting.")
+    convert_image(input_file, output_file)
