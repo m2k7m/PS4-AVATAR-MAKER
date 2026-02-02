@@ -154,17 +154,17 @@ def convert_image(image_path: str, output_path: str) -> None:
 if __name__ == "__main__":
     arg_count = len(sys.argv)
 
-    if arg_count == 2:
-        input_file = sys.argv[1]
-        output_file = input_file.rsplit(".", 1)[0] + ".xavatar"
-    elif arg_count == 3:
-        input_file = sys.argv[1]
-        output_file = (
+    input_file = (
+        input("Enter the input image path or URL: ") if arg_count != 2 else sys.argv[1]
+    )
+    output_file = (
+        input_file.rsplit(".", 1)[0] + ".xavatar"
+        if arg_count != 3
+        else (
             sys.argv[2]
             if sys.argv[2].endswith(".xavatar")
             else sys.argv[2] + ".xavatar"
         )
-    else:
-        sys.exit(f"Usage: {sys.executable} {__file__} <input_image> [output_image]")
+    )
 
     convert_image(input_file, output_file)
