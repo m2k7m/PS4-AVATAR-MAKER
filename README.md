@@ -10,7 +10,6 @@ This tool is provided for educational and customization purposes. Please ensure 
 
 * **Dual Input Support:** Accepts local image paths or direct web URLs.
 * **Automatic Resizing:** Automatically scales images to required dimensions.
-* **Offline Activation Mode:** Optionally generates an `online.json` file and structure for offline-activated accounts.
 * **Dependency Management:** auto-detects missing Python libraries and offers to install them.
 
 ## 📋 Prerequisites
@@ -18,10 +17,10 @@ This tool is provided for educational and customization purposes. Please ensure 
 Before running the utility, ensure you have the following installed:
 
 ### 1. Python
-You need Python 3.x installed on your system.
+You need Python 3.x installed on your system. [Download](https://www.python.org/downloads/)
 
 ### 2. ImageMagick (Important)
-This utility uses the **Wand** library, which is a binding for ImageMagick. You must have the ImageMagick binary installed on your operating system for Wand to work.
+This utility uses the **Wand** library, which is a binding for ImageMagick. You must have the ImageMagick binary installed on your operating system for **Wand** to work.
 
 * **Windows:** [Download ImageMagick](https://imagemagick.org/script/download.php#windows).
 * **Linux:** `sudo apt-get install libmagickwand-dev`
@@ -89,11 +88,11 @@ Once you have generated your `.xavatar` file, transfer it to your console via FT
 ### Method 1: PSX-Xplorer
 
 1.  Navigate to the file location using **[PS4-Xplorer 2.0](https://pkg-zone.com/details/LAPY20009)** (or **[PS5-Xplorer](https://pkg-zone.com/details/LAPY20011)**).
-2.  Simply press the **X** button on the `.xavatar` file to install it.
+2. Simply press the <img src="https://raw.githubusercontent.com/bucanero/pkgi-ps3/master/data/CROSS.png" width="20" height="20" style="vertical-align: middle;"> button on the `.xavatar` file to install it.
 
 ### Method 2: Avatar Changer App
 
-1.  Move the `.xavatar` file to the following path on your console: `/data/AVATARS`
+1.  Move the `.xavatar` file to the following path on your console: `/data/AVATARS/`
 2.  Open **[Avatar Changer](https://pkg-zone.com/details/LAPY20015)** (or **[Avatar Changer PS5](https://pkg-zone.com/details/LAPY20016)**).
 3.  Select and apply the image from within the application.
 
