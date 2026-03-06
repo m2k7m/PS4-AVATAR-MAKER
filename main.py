@@ -20,6 +20,7 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 #  SOFTWARE.
 
+import json
 import shutil
 import sys
 import time
@@ -29,11 +30,79 @@ from tempfile import TemporaryDirectory
 from zipfile import ZIP_DEFLATED, ZipFile
 
 try:
+    import i18n
+except ImportError:
+    c = input("python-i18n library is not installed. Do you want to install it now? (y/n): ")
+    if c.lower() == "y":
+        import subprocess
+
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "python-i18n"])
+        import i18n
+    else:
+        sys.exit("python-i18n is required to run this utility.")
+
+config_path = Path("config.json")
+locales_dir = Path("locales")
+
+if not locales_dir.exists():
+    locales_dir.mkdir()
+    en_data = {
+        "wand_install": "Wand library is not installed. Do you want to install it now? (y/n): ",
+        "wand_req": "Wand library is required to run this utility.",
+        "req_install": "requests library is not installed. Do you want to install it now? (y/n): ",
+        "req_req": "requests library is required to process images from URLs.",
+        "dl_fail": "Failed to download image from the provided link.\nStatus code: %{status}",
+        "success": "Converted %{input} to %{output} successfully.",
+        "time": "Time taken: %{time} seconds",
+        "input_path": "Enter the input image path or URL: ",
+        "no_input": "No input provided."
+    }
+    ar_data = {
+        "wand_install": "مكتبة Wand غير مثبتة. هل تريد تثبيتها الآن؟ (y/n): ",
+        "wand_req": "مكتبة Wand مطلوبة لتشغيل هذه الأداة.",
+        "req_install": "مكتبة requests غير مثبتة. هل تريد تثبيتها الآن؟ (y/n): ",
+        "req_req": "مكتبة requests مطلوبة لمعالجة الصور من الروابط.",
+        "dl_fail": "فشل تنزيل الصورة من الرابط.\nكود الحالة: %{status}",
+        "success": "تم تحويل %{input} إلى %{output} بنجاح.",
+        "time": "الوقت المستغرق: %{time} ثانية",
+        "input_path": "أدخل مسار الصورة أو الرابط: ",
+        "no_input": "لم يتم إدخال مسار أو رابط."
+    }
+    (locales_dir / "app.en.json").write_text(json.dumps(en_data, ensure_ascii=False), encoding="utf-8")
+    (locales_dir / "app.ar.json").write_text(json.dumps(ar_data, ensure_ascii=False), encoding="utf-8")
+
+i18n.load_path.append(str(locales_dir))
+
+def load_lang():
+    if config_path.exists():
+        with open(config_path, "r", encoding="utf-8") as f:
+            return json.load(f).get("lang", "en")
+    return None
+
+def save_lang(lang):
+    with open(config_path, "w", encoding="utf-8") as f:
+        json.dump({"lang": lang}, f)
+
+current_lang = load_lang()
+
+if current_lang is None:
+    c = input("Choose language / اختر اللغة (1: English, 2: العربية): ")
+    current_lang = "ar" if c == "2" else "en"
+    save_lang(current_lang)
+else:
+    c = input("Press Enter to continue or 'L' to change language / اضغط انتر للاستمرار او L لتغيير اللغة: ")
+    if c.lower() == 'l':
+        c2 = input("Choose language / اختر اللغة (1: English, 2: العربية): ")
+        current_lang = "ar" if c2 == "2" else "en"
+        save_lang(current_lang)
+
+i18n.set('locale', current_lang)
+i18n.set('fallback', 'en')
+
+try:
     from wand.image import Image as WandImage
 except ImportError:
-    choice = input(
-        "Wand library is not installed. Do you want to install it now? (y/n): "
-    )
+    choice = input(i18n.t('app.wand_install'))
 
     if choice.lower() == "y":
         import subprocess
@@ -41,7 +110,7 @@ except ImportError:
         subprocess.check_call([sys.executable, "-m", "pip", "install", "Wand"])
         from wand.image import Image as WandImage
     else:
-        sys.exit("Wand library is required to run this utility.")
+        sys.exit(i18n.t('app.wand_req'))
 
 sizes = [440, 260, 128, 64]
 
@@ -77,9 +146,7 @@ def process_link(link: str) -> bytes:
     try:
         import requests
     except ImportError:
-        choice = input(
-            "requests library is not installed. Do you want to install it now? (y/n): "
-        )
+        choice = input(i18n.t('app.req_install'))
 
         if choice.lower() == "y":
             import subprocess
@@ -87,16 +154,14 @@ def process_link(link: str) -> bytes:
             subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
             import requests
         else:
-            sys.exit("requests library is required to process images from URLs.")
+            sys.exit(i18n.t('app.req_req'))
 
     response = requests.get(link, stream=True)
 
     if response.status_code == 200:
         return response.content
     else:
-        sys.exit(
-            f"Failed to download image from the provided link.\nStatus code: {response.status_code}"
-        )
+        sys.exit(i18n.t('app.dl_fail', status=response.status_code))
 
 
 def process_image(img: WandImage, temp_dir: Path) -> None:
@@ -141,19 +206,19 @@ def convert_image(image_input: str, output_path_str: str) -> None:
 
     end_time = time.time()
 
-    print(f"Converted {image_input} to {output_path} successfully.")
-    print(f"Time taken: {end_time - start_time:.2f} seconds")
+    print(i18n.t('app.success', input=image_input, output=output_path))
+    print(i18n.t('app.time', time=f"{end_time - start_time:.2f}"))
 
 
 if __name__ == "__main__":
     arg_count = len(sys.argv)
 
     input_str = (
-        input("Enter the input image path or URL: ") if arg_count < 2 else sys.argv[1]
+        input(i18n.t('app.input_path')) if arg_count < 2 else sys.argv[1]
     )
 
     if not input_str:
-        sys.exit("No input provided.")
+        sys.exit(i18n.t('app.no_input'))
 
     if arg_count != 3:
         if input_str.startswith(("http://", "https://")):
