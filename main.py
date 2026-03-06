@@ -1,3 +1,4 @@
+
 #  Copyright (C) 2025-2026 m2k7m
 #
 #  The MIT License (MIT)
@@ -25,13 +26,10 @@ import os
 import shutil
 import sys
 import time
-from io import BytesIO
-from pathlib import Path
-from tempfile import TemporaryDirectory
+import tempfile
 from zipfile import ZIP_DEFLATED, ZipFile
 
 if os.name == 'nt':
-    os.system('chcp 65001 > nul')
     sys.stdout.reconfigure(encoding='utf-8')
     sys.stdin.reconfigure(encoding='utf-8')
 
@@ -40,22 +38,27 @@ try:
     import arabic_reshaper
     from bidi.algorithm import get_display
 except ImportError:
-    if input("Missing libraries. Install them now? (y/n): ").strip().lower() == "y":
+    user_choice = input("Missing essential libraries (i18n, arabic-reshaper, python-bidi). Install them now? (y/n): ").strip().lower()
+    if user_choice == "y":
         import subprocess
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "python-i18n", "arabic-reshaper", "python-bidi"])
-        import i18n
-        import arabic_reshaper
-        from bidi.algorithm import get_display
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "python-i18n", "arabic-reshaper", "python-bidi"])
+            import i18n
+            import arabic_reshaper
+            from bidi.algorithm import get_display
+        except Exception as e:
+            sys.exit(f"Failed to install libraries. Please install manually: pip install python-i18n arabic-reshaper python-bidi. Error: {e}")
     else:
-        sys.exit("Libraries are required.")
+        sys.exit("Required libraries are missing.")
 
-CFG_FILE = Path("config.json")
-LOCALES_DIR = Path("locales")
-IMG_SIZES = [440, 260, 128, 64]
+CONFIG_FILE_NAME = "config.json"
+LOCALES_FOLDER = "locales"
+AVATAR_IMAGE_SIZES = [440, 260, 128, 64]
 
-LOCALES_DIR.mkdir(exist_ok=True)
+if not os.path.exists(LOCALES_FOLDER):
+    os.makedirs(LOCALES_FOLDER)
 
-en_dict = {
+en_messages = {
     "prompt": "Press Space to continue or 'L' to change language: ",
     "choose": "Choose language (1: English, 2: Arabic): ",
     "wand_ask": "Wand library is missing. Install it now? (y/n): ",
@@ -69,8 +72,8 @@ en_dict = {
     "no_in": "No input provided."
 }
 
-ar_dict = {
-    "prompt": "اضغط مسطرة للاستمرار او مفتاح L لتغيير اللغة: ",
+ar_messages = {
+    "prompt": "اضغط مسطرة للاستمرار أو مفتاح L لتغيير اللغة: ",
     "choose": "اختر اللغة (1 للانجليزية، 2 للعربية): ",
     "wand_ask": "مكتبة Wand غير موجودة. هل تريد تثبيتها؟ (y/n): ",
     "wand_err": "المكتبة مطلوبة لتشغيل الأداة.",
@@ -83,145 +86,173 @@ ar_dict = {
     "no_in": "لم يتم إدخال شيء."
 }
 
-(LOCALES_DIR / "app.en.json").write_text(json.dumps({"en": en_dict}, ensure_ascii=False), encoding="utf-8")
-(LOCALES_DIR / "app.ar.json").write_text(json.dumps({"ar": ar_dict}, ensure_ascii=False), encoding="utf-8")
+with open(os.path.join(LOCALES_FOLDER, "app.en.json"), "w", encoding="utf-8") as f:
+    json.dump({"en": en_messages}, f, ensure_ascii=False, indent=4)
+with open(os.path.join(LOCALES_FOLDER, "app.ar.json"), "w", encoding="utf-8") as f:
+    json.dump({"ar": ar_messages}, f, ensure_ascii=False, indent=4)
 
-i18n.load_path.append(str(LOCALES_DIR))
+i18n.load_path.append(LOCALES_FOLDER)
 i18n.set('file_format', 'json')
 i18n.set('filename_format', '{namespace}.{locale}.{format}')
 
-def _(key, **kwargs):
-    txt = i18n.t(f"app.{key}", **kwargs)
+def get_localized_text(key, **kwargs):
+    text = i18n.t(f"app.{key}", **kwargs)
     if i18n.get('locale') == 'ar':
-        return '\n'.join(get_display(arabic_reshaper.reshape(line)) for line in txt.split('\n'))
-    return txt
+        return get_display(arabic_reshaper.reshape(text))
+    return text
 
-lang = "ar"
-if CFG_FILE.exists():
-    with open(CFG_FILE, "r", encoding="utf-8") as f:
-        lang = json.load(f).get("lang", "ar")
+current_language_setting = "en"
+if os.path.exists(CONFIG_FILE_NAME):
+    try:
+        with open(CONFIG_FILE_NAME, "r", encoding="utf-8") as f:
+            config_data = json.load(f)
+            current_language_setting = config_data.get("lang", "en")
+    except (json.JSONDecodeError, Exception):
+        pass
 
-with open(CFG_FILE, "w", encoding="utf-8") as f:
-    json.dump({"lang": lang}, f)
+with open(CONFIG_FILE_NAME, "w", encoding="utf-8") as f:
+    json.dump({"lang": current_language_setting}, f, indent=4, ensure_ascii=False)
 
-i18n.set('locale', lang)
+i18n.set('locale', current_language_setting)
 i18n.set('fallback', 'en')
 
-print(_('prompt'), end='', flush=True)
+print(get_localized_text('prompt'), end='', flush=True)
 
 if os.name == 'nt':
     import msvcrt
     while True:
-        k = msvcrt.getwch().lower()
-        if k == ' ':
+        key_pressed = msvcrt.getwch().lower()
+        if key_pressed == ' ':
             print()
             break
-        elif k == 'l':
+        elif key_pressed == 'l':
             print()
-            c = input(_('choose')).strip()
-            lang = "en" if c == "1" else "ar"
-            with open(CFG_FILE, "w", encoding="utf-8") as f:
-                json.dump({"lang": lang}, f)
-            i18n.set('locale', lang)
+            lang_choice = input(get_localized_text('choose')).strip()
+            current_language_setting = "en" if lang_choice == "1" else "ar"
+            with open(CONFIG_FILE_NAME, "w", encoding="utf-8") as f:
+                json.dump({"lang": current_language_setting}, f, indent=4, ensure_ascii=False)
+            i18n.set('locale', current_language_setting)
             break
 else:
-    ans = input()
-    if ans.lower() == 'l':
-        c = input(_('choose')).strip()
-        lang = "en" if c == "1" else "ar"
-        with open(CFG_FILE, "w", encoding="utf-8") as f:
-            json.dump({"lang": lang}, f)
-        i18n.set('locale', lang)
+    user_response = input()
+    if user_response.lower() == 'l':
+        lang_choice = input(get_localized_text('choose')).strip()
+        current_language_setting = "en" if lang_choice == "1" else "ar"
+        with open(CONFIG_FILE_NAME, "w", encoding="utf-8") as f:
+            json.dump({"lang": current_language_setting}, f, indent=4, ensure_ascii=False)
+        i18n.set('locale', current_language_setting)
 
 try:
     from wand.image import Image as WandImage
 except ImportError:
-    if input(_('wand_ask')).strip().lower() == "y":
+    user_answer = input(get_localized_text('wand_ask')).strip().lower()
+    if user_answer == "y":
         import subprocess
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "Wand"])
-        from wand.image import Image as WandImage
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "Wand"])
+            from wand.image import Image as WandImage
+        except Exception as e:
+            sys.exit(f"Failed to install Wand library. Please install manually: pip install Wand. Error: {e}")
     else:
-        sys.exit(_('wand_err'))
+        sys.exit(get_localized_text('wand_err'))
 
-def make_zip(files: list[Path]) -> bytes:
-    mem_zip = BytesIO()
-    with ZipFile(mem_zip, "w", ZIP_DEFLATED) as zf:
-        for f in files:
-            zf.write(f, f.name)
-    mem_zip.seek(0)
-    return mem_zip.read()
+def create_avatar_zip(files_to_add, output_zip_path):
+    with ZipFile(output_zip_path, "w", ZIP_DEFLATED) as zf:
+        for f_path in files_to_add:
+            zf.write(f_path, os.path.basename(f_path))
 
-def fetch_image(url: str) -> bytes:
+def download_image_from_web(image_url):
     try:
         import requests
     except ImportError:
-        if input(_('req_ask')).strip().lower() == "y":
+        user_answer = input(get_localized_text('req_ask')).strip().lower()
+        if user_answer == "y":
             import subprocess
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
-            import requests
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
+                import requests
+            except Exception as e:
+                sys.exit(f"Failed to install requests library. Please install manually: pip install requests. Error: {e}")
         else:
-            sys.exit(_('req_err'))
+            sys.exit(get_localized_text('req_err'))
 
-    res = requests.get(url, stream=True)
-    if res.status_code == 200:
-        return res.content
-    sys.exit(_('fail_dl', status=res.status_code))
+    try:
+        response = requests.get(image_url, stream=True)
+        response.raise_for_status()
+        return response.content
+    except requests.exceptions.RequestException as e:
+        sys.exit(get_localized_text('fail_dl', status=e))
 
-def process_img(img, out_dir: Path):
-    img.format = "png"
-    img.resize(440, 440)
-    img.save(filename=str(out_dir / "avatar.png"))
-    img.compression = "dxt5"
+def process_and_save_image(image_object, temp_output_folder):
+    image_object.format = "png"
+    image_object.resize(440, 440)
+    image_object.save(filename=os.path.join(temp_output_folder, "avatar.png"))
 
-    for s in IMG_SIZES:
-        if img.width != s:
-            img.resize(s, s)
-        img.save(filename=str(out_dir / f"avatar{s}.dds"))
+    image_object.compression = "dxt5"
+    for size in AVATAR_IMAGE_SIZES:
+        if image_object.width != size:
+            image_object.resize(size, size)
+        image_object.save(filename=os.path.join(temp_output_folder, f"avatar{size}.dds"))
 
-def build_avatar(target_in: str, target_out: Path):
-    with TemporaryDirectory() as tmp:
-        tmp_dir = Path(tmp)
-        t_start = time.time()
+def make_ps4_avatar_file(input_source, final_output_file):
+    temp_working_dir = tempfile.mkdtemp()
+    start_time = time.time()
 
-        if target_in.startswith(("http://", "https://")):
-            blob = fetch_image(target_in)
-            with WandImage(blob=blob) as img:
-                process_img(img, tmp_dir)
+    try:
+        if input_source.startswith(("http://", "https://")):
+            image_bytes = download_image_from_web(input_source)
+            with WandImage(blob=image_bytes) as img:
+                process_and_save_image(img, temp_working_dir)
         else:
-            with WandImage(filename=target_in) as img:
-                process_img(img, tmp_dir)
+            with WandImage(filename=input_source) as img:
+                process_and_save_image(img, temp_working_dir)
 
-        json_data = r"""{"avatarUrl":"http:\/\/static-resource.np.community.playstation.net\/avatar_xl\/WWS_E\/E0012_XL.png","firstName":"","lastName":"","pictureUrl":"https:\/\/image.api.np.km.playstation.net\/images\/?format=png&w=440&h=440&image=https%3A%2F%2Fkfscdn.api.np.km.playstation.net%2F00000000000008%2F000000000000003.png&sign=blablabla019501","trophySummary":"{\"level\":1,\"progress\":0,\"earnedTrophies\":{\"platinum\":0,\"gold\":0,\"silver\":0,\"bronze\":0}}","isOfficiallyVerified":"true"}"""
-        (tmp_dir / "online.json").write_text(json_data, encoding="utf-8")
-        shutil.copy(tmp_dir / "avatar.png", tmp_dir / "picture.png")
+        json_data_content = '''{
+    "avatarUrl":"http:\/\/static-resource.np.community.playstation.net\/avatar_xl\/WWS_E\/E0012_XL.png",
+    "firstName":"",
+    "lastName":"",
+    "pictureUrl":"https:\/\/image.api.np.km.playstation.net\/images\/?format=png&w=440&h=440&image=https%3A%2F%2Fkfscdn.api.np.km.playstation.net%2F00000000000008%2F000000000000003.png&sign=blablabla019501",
+    "trophySummary":"{\"level\":1,\"progress\":0,\"earnedTrophies\":{\"platinum\":0,\"gold\":0,\"silver\":0,\"bronze\":0}}",
+    "isOfficiallyVerified":"true"
+}'''
+        with open(os.path.join(temp_working_dir, "online.json"), "w", encoding="utf-8") as f:
+            f.write(json_data_content)
+
+        shutil.copy(os.path.join(temp_working_dir, "avatar.png"), os.path.join(temp_working_dir, "picture.png"))
+        for size in AVATAR_IMAGE_SIZES:
+            shutil.copy(os.path.join(temp_working_dir, f"avatar{size}.dds"), os.path.join(temp_working_dir, f"picture{size}.dds"))
+
+        all_temp_files = [os.path.join(temp_working_dir, f) for f in os.listdir(temp_working_dir)]
         
-        for s in IMG_SIZES:
-            shutil.copy(tmp_dir / f"avatar{s}.dds", tmp_dir / f"picture{s}.dds")
+        create_avatar_zip(all_temp_files, final_output_file)
 
-        final_bytes = make_zip(list(tmp_dir.iterdir()))
+    finally:
+        shutil.rmtree(temp_working_dir)
 
-    target_out.write_bytes(final_bytes)
-    t_end = time.time()
+    end_time = time.time()
 
-    print(_('success', input=target_in, output=target_out))
-    print(_('timer', time=f"{t_end - t_start:.2f}"))
+    print(get_localized_text('success', input=input_source, output=final_output_file))
+    print(get_localized_text('timer', time=f"{end_time - start_time:.2f}"))
 
 if __name__ == "__main__":
-    args = sys.argv
-    user_input = input(_('enter_p')).strip() if len(args) < 2 else args[1]
+    cmd_args = sys.argv
+    user_input_path = input(get_localized_text('enter_p')).strip() if len(cmd_args) < 2 else cmd_args[1]
 
-    if not user_input:
-        sys.exit(_('no_in'))
+    if not user_input_path:
+        sys.exit(get_localized_text('no_in'))
 
-    if len(args) != 3:
-        if user_input.startswith(("http://", "https://")):
-            safe_name = user_input.replace("://", "_").replace("/", "_")
-            out_file = Path(safe_name).with_suffix(".xavatar")
+    output_file_name = None
+    if len(cmd_args) < 3:
+        if user_input_path.startswith(("http://", "https://")):
+            safe_name = user_input_path.replace("://", "_").replace("/", "_").replace(".", "_")
+            output_file_name = safe_name + ".xavatar"
         else:
-            out_file = Path(user_input).with_suffix(".xavatar")
+            base_name, _ = os.path.splitext(user_input_path)
+            output_file_name = base_name + ".xavatar"
     else:
-        out_file = Path(args[2])
-        if out_file.suffix != ".xavatar":
-            out_file = out_file.with_suffix(".xavatar")
+        output_file_name = cmd_args[2]
+        if not output_file_name.endswith(".xavatar"):
+            output_file_name += ".xavatar"
 
-    build_avatar(user_input, out_file)
+    make_ps4_avatar_file(user_input_path, output_file_name)
+    
