@@ -1,4 +1,3 @@
-
 #  Copyright (C) 2025-2026 m2k7m
 #
 #  The MIT License (MIT)
