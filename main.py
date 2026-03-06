@@ -27,6 +27,14 @@ from io import BytesIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from zipfile import ZIP_DEFLATED, ZipFile
+import logging
+
+logging.basicConfig(filename='activity.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def bail_out(msg):
+    logging.error(msg)
+    print(f"\n[Error]: {msg}", file=sys.stderr)
+    sys.exit(1)
 
 try:
     from wand.image import Image as WandImage
@@ -34,44 +42,43 @@ except ImportError:
     choice = input(
         "Wand library is not installed. Do you want to install it now? (y/n): "
     )
-
     if choice.lower() == "y":
         import subprocess
-
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "Wand"])
-        from wand.image import Image as WandImage
+        logging.info("Attempting to install Wand library.")
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "Wand"])
+            from wand.image import Image as WandImage
+        except Exception as e:
+            logging.exception(f"Failed to install Wand library: {e}")
+            bail_out("Failed to install Wand library.")
     else:
-        sys.exit("Wand library is required to run this utility.")
+        bail_out("Wand library is required to run this utility.")
 
 sizes = [440, 260, 128, 64]
 
-
 def add_files_to_zip_in_memory(file_paths: list[Path]) -> bytes:
     in_memory_zip = BytesIO()
-
     with ZipFile(in_memory_zip, "w", ZIP_DEFLATED) as zf:
         for file_path in file_paths:
             zf.write(file_path, file_path.name)
-
     in_memory_zip.seek(0)
+    logging.info("Files added to in-memory zip archive.")
     return in_memory_zip.read()
 
-
 def create_online_json(directory: Path) -> None:
-    online_json_content = r"""{"avatarUrl":"http:\/\/static-resource.np.community.playstation.net\/avatar_xl\/WWS_E\/E0012_XL.png","firstName":"","lastName":"","pictureUrl":"https:\/\/image.api.np.km.playstation.net\/images\/?format=png&w=440&h=440&image=https%3A%2F%2Fkfscdn.api.np.km.playstation.net%2F00000000000008%2F000000000000003.png&sign=blablabla019501","trophySummary":"{\"level\":1,\"progress\":0,\"earnedTrophies\":{\"platinum\":0,\"gold\":0,\"silver\":0,\"bronze\":0}}","isOfficiallyVerified":"true"}"""
-
+    online_json_content = r"""{\"avatarUrl\":\"http:\/\/static-resource.np.community.playstation.net\/avatar_xl\/WWS_E\/E0012_XL.png\",\"firstName\":\"\",\"lastName\":\"\",\"pictureUrl\":\"https:\/\/image.api.np.km.playstation.net\/images\/?format=png&w=440&h=440&image=https%3A%2F%2Fkfscdn.api.np.km.playstation.net%2F000000000000003.png&sign=blablabla019501\",\"trophySummary\":\"{\\\"level\\\":1,\\\"progress\\\":0,\\\"earnedTrophies\\\":{\\\"platinum\\\":0,\\\"gold\\\":0,\\\"silver\\\":0,\\\"bronze\\\":0}}\",\"isOfficiallyVerified\":\"true\"}"""
     (directory / "online.json").write_text(online_json_content, encoding="utf-8")
-
+    logging.info(f"online.json created in: {directory / 'online.json'}")
 
 def copy_files(directory: Path) -> None:
     create_online_json(directory)
     shutil.copy(directory / "avatar.png", directory / "picture.png")
-
+    logging.info("Copied avatar.png to picture.png.")
     for size in sizes:
         outputdirection = directory / f"picture{size}.dds"
         inputdirection = directory / f"avatar{size}.dds"
         shutil.copy(inputdirection, outputdirection)
-
+        logging.info(f"Copied {inputdirection.name} to {outputdirection.name}.")
 
 def process_link(link: str) -> bytes:
     try:
@@ -80,47 +87,45 @@ def process_link(link: str) -> bytes:
         choice = input(
             "requests library is not installed. Do you want to install it now? (y/n): "
         )
-
         if choice.lower() == "y":
             import subprocess
-
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
-            import requests
+            logging.info("Attempting to install requests library.")
+            try:
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "requests"])
+                import requests
+            except Exception as e:
+                logging.exception(f"Failed to install requests library: {e}")
+                bail_out("Failed to install requests library.")
         else:
-            sys.exit("requests library is required to process images from URLs.")
-
+            bail_out("requests library is required to process images from URLs.")
+    
+    logging.info(f"Downloading image from URL: {link}")
+    
     response = requests.get(link, stream=True)
-
     if response.status_code == 200:
+        logging.info("Image downloaded successfully.")
         return response.content
     else:
-        sys.exit(
-            f"Failed to download image from the provided link.\nStatus code: {response.status_code}"
-        )
-
+        logging.error(f"Failed to download image from URL. Status code: {response.status_code}")
+        bail_out(f"Failed to download image from the provided link.\nStatus code: {response.status_code}")
 
 def process_image(img: WandImage, temp_dir: Path) -> None:
     img.format = "png"
     img.resize(440, 440)
-
     img.save(filename=str(temp_dir / "avatar.png"))
-
+    logging.info(f"Saved 440x440 avatar.png to: {temp_dir / 'avatar.png'}")
     img.compression = "dxt5"
-
     for size in sizes:
         if img.width != size:
             img.resize(size, size)
-
         output_filename = temp_dir / f"avatar{size}.dds"
         img.save(filename=str(output_filename))
-
+        logging.info(f"Saved {size}x{size} avatar.dds to: {output_filename}")
 
 def convert_image(image_input: str, output_path_str: str) -> None:
     output_path = Path(output_path_str)
-
     with TemporaryDirectory() as temp_dir_str:
         temp_dir = Path(temp_dir_str)
-
         if image_input.startswith(("http://", "https://")):
             image_bytes = process_link(image_input)
             start_time = time.time()
@@ -130,31 +135,25 @@ def convert_image(image_input: str, output_path_str: str) -> None:
             start_time = time.time()
             with WandImage(filename=image_input) as img:
                 process_image(img, temp_dir)
-
         copy_files(temp_dir)
-
         file_paths = [p for p in temp_dir.iterdir()]
-
         archive_bytes = add_files_to_zip_in_memory(file_paths)
-
     output_path.write_bytes(archive_bytes)
-
     end_time = time.time()
-
-    print(f"Converted {image_input} to {output_path} successfully.")
+    logging.info(f"Converted {image_input} to {output_path} successfully.")
+    logging.info(f"Time taken: {end_time - start_time:.2f} seconds.")
+    print(f"\nConverted {image_input} to {output_path} successfully.")
     print(f"Time taken: {end_time - start_time:.2f} seconds")
-
 
 if __name__ == "__main__":
     arg_count = len(sys.argv)
-
     input_str = (
         input("Enter the input image path or URL: ") if arg_count < 2 else sys.argv[1]
     )
-
     if not input_str:
-        sys.exit("No input provided.")
-
+        bail_out("No input provided.")
+    
+    output_file_path = None
     if arg_count != 3:
         if input_str.startswith(("http://", "https://")):
             output_file_path = Path(
@@ -166,5 +165,7 @@ if __name__ == "__main__":
         output_file_path = Path(sys.argv[2])
         if output_file_path.suffix != ".xavatar":
             output_file_path = output_file_path.with_suffix(".xavatar")
-
+    
+    logging.info(f"Starting conversion for input: {input_str} to output: {output_file_path}")
+    
     convert_image(input_str, str(output_file_path))
