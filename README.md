@@ -71,7 +71,7 @@ python main.py my_image.jpg custom_name
 Directly download and convert an image from the web.
 
 ```bash
-python main.py [https://example.com/cool_avatar.png](https://example.com/cool_avatar.png)
+python main.py https://example.com/cool_avatar.png
 
 ```
 
