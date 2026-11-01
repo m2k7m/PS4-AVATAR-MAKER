@@ -1,6 +1,9 @@
 # PS4-AVATAR-MAKER
 
-A Python utility to automatically convert images (local files or URLs) into the `.xavatar` format. This tool handles resizing, and directory structure generation required for custom avatars (typically for Jailbroken PlayStation 4/5).
+> [!NOTE]
+> This utility is discontinued and no longer maintained. Please move to [m2k7m/XAVATAR-web](https://github.com/m2k7m/XAVATAR-web).
+
+A Python utility to automatically convert images (local files or URLs) into the `.xavatar` format. This tool handles resizing and directory structure generation required for custom avatars (typically for jailbroken PlayStation 4/5).
 
 ## ⚠️ Disclaimer
 
@@ -8,9 +11,9 @@ This tool is provided for educational and customization purposes. Please ensure 
 
 ## 🚀 Features
 
-* **Dual Input Support:** Accepts local image paths or direct web URLs.
-* **Automatic Resizing:** Automatically scales images to required dimensions.
-* **Dependency Management:** auto-detects missing Python libraries and offers to install them.
+- **Dual Input Support:** Accepts local image paths or direct web URLs.
+- **Automatic Resizing:** Automatically scales images to the required dimensions.
+- **Dependency Management:** Auto-detects missing Python libraries and offers to install them.
 
 ## 📋 Prerequisites
 
@@ -22,22 +25,23 @@ You need Python 3.x installed on your system. [Download](https://www.python.org/
 ### 2. ImageMagick (Important)
 This utility uses the **Wand** library, which is a binding for ImageMagick. You must have the ImageMagick binary installed on your operating system for **Wand** to work.
 
-* **Windows:** [Download ImageMagick](https://imagemagick.org/script/download.php#windows).
-* **Linux:** `sudo apt-get install libmagickwand-dev`
-* **macOS:** `brew install imagemagick`
+- **Windows:** [Download ImageMagick](https://imagemagick.org/script/download.php#windows).
+- **Linux:** `sudo apt-get install libmagickwand-dev`
+- **macOS:** `brew install imagemagick`
 
-Check [docs.wand-py.org](https://docs.wand-py.org/en/0.6.12/guide/install.html) for more.
+Check [docs.wand-py.org](https://docs.wand-py.org/en/0.6.12/guide/install.html) for more information.
 
 ## 📦 Installation
 
-1.  Clone this repository or download as zip .
-2.  (Optional) Install the required Python packages **manually**:
+1. Clone this repository or download it as a ZIP file.
+2. (Optional) Install the required Python packages **manually**:
 
 ```bash
 pip install Wand requests
-````
 
-> [\!NOTE]
+```
+
+> [!NOTE]
 > The utility includes an auto-installer feature that will ask to install these if they are missing.
 
 ## 💻 Usage
@@ -50,6 +54,7 @@ Convert a local image. The output filename will default to the input name with t
 
 ```bash
 python main.py my_image.jpg
+
 ```
 
 ### Specify Output Name
@@ -58,6 +63,7 @@ You can define a custom name for the output file.
 
 ```bash
 python main.py my_image.jpg custom_name
+
 ```
 
 ### From a URL
@@ -65,21 +71,22 @@ python main.py my_image.jpg custom_name
 Directly download and convert an image from the web.
 
 ```bash
-python main.py https://example.com/cool_avatar.png
+python main.py [https://example.com/cool_avatar.png](https://example.com/cool_avatar.png)
+
 ```
 
-## 🤖 Telegram Bot Alternative
+## 🌐 XAVATAR-web Alternative
 
-If you don't have a PC, I am hosting this utility on Telegram. You can use it directly via the link below:
+If you don't have a PC, I am hosting a web-based alternative. You can use it directly via the link below:
 
-[**@PS4AVATARSBOT**](https://t.me/PS4AVATARSBOT)
+**[XAVATAR-web](https://m2k7m.github.io/XAVATAR-web/)**
 
 ## 🌐 Where can I get avatars?
 
 You can find high-quality avatars to convert at the following websites:
 
-  * [PS Prices](https://psprices.com/region-us/collection/avatars)
-  * [PSN Tools](https://www.psntools.com/avatars?page=1)
+* [PS Prices](https://psprices.com/region-us/collection/avatars)
+* [PSN Tools](https://www.psntools.com/avatars?page=1)
 
 ## 🎮 How to Apply the Avatar
 
@@ -87,19 +94,19 @@ Once you have generated your `.xavatar` file, transfer it to your console via FT
 
 ### Method 1: PSX-Xplorer
 
-1.  Navigate to the file location using **[PS4-Xplorer 2.0](https://pkg-zone.com/details/LAPY20009)** (or **[PS5-Xplorer](https://pkg-zone.com/details/LAPY20011)**).
-2. Simply press the <img src="https://raw.githubusercontent.com/bucanero/pkgi-ps3/master/data/CROSS.png" width="20" height="20" style="vertical-align: middle;"> button on the `.xavatar` file to install it.
+1. Navigate to the file location using **[PS4-Xplorer 2.0](https://pkg-zone.com/details/LAPY20009)** (or **[PS5-Xplorer](https://pkg-zone.com/details/LAPY20011)**).
+2. Simply press the  button on the `.xavatar` file to install it.
 
 ### Method 2: Avatar Changer App
 
-1.  Move the `.xavatar` file to the following path on your console: `/data/AVATARS/`
-2.  Open **[Avatar Changer](https://pkg-zone.com/details/LAPY20015)** (or **[Avatar Changer PS5](https://pkg-zone.com/details/LAPY20016)**).
-3.  Select and apply the image from within the application.
+1. Move the `.xavatar` file to the following path on your console: `/data/AVATARS/`
+2. Open **[Avatar Changer](https://pkg-zone.com/details/LAPY20015)** (or **[Avatar Changer PS5](https://pkg-zone.com/details/LAPY20016)**).
+3. Select and apply the image from within the application.
 
 ## 🏆 Credits
 
-  * **[LAPY](https://x.com/Lapy05575948):** For creating the `.xavatar` format.
-  * **[m2k7m](https://github.com/m2k7m):** For creating this Python utility.
+* **[LAPY](https://x.com/Lapy05575948):** For creating the `.xavatar` format.
+* **[m2k7m](https://github.com/m2k7m):** For creating this Python utility.
 
 ## Contributing
 
